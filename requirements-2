@@ -1,0 +1,17 @@
+flask
+flask-socketio
+python-dotenv
+opencv-python-headless
+picamera2
+numpy
+tflite-runtime
+firebase-admin
+dash
+dash-bootstrap-components
+plotly
+pandas
+psutil
+gpiozero
+lgpio
+requests
+pyngrok
