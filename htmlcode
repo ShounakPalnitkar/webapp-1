@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Hat Control Panel</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc3f7;
+            --dark-color: #1a2639;
+            --light-color: #f0f4f8;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+        }
+        
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            margin-bottom: 20px;
+            border: none;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+        }
+        
+        .card-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-radius: 12px 12px 0 0 !important;
+            padding: 15px;
+            font-weight: 600;
+        }
+        
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 5px 10px;
+            border-radius: 20px;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+        
+        .energy-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: var(--secondary-color);
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .temp-display {
+            font-size: 1.5rem;
+            color: #e53935;
+            text-align: center;
+        }
+        
+        .nav-tabs .nav-link.active {
+            font-weight: bold;
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--accent-color);
+        }
+        
+        .sensor-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+        
+        @media (max-width: 768px) {
+            .energy-display {
+                font-size: 1.5rem;
+            }
+            
+            .temp-display {
+                font-size: 1.2rem;
+            }
+            
+            .card {
+                margin-bottom: 15px;
+            }
+        }
+        
+        /* Dark mode support */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background-color: #121212;
+                color: #e0e0e0;
+            }
+            
+            .card {
+                background-color: #1e1e1e;
+                color: #e0e0e0;
+            }
+            
+            .card-header {
+                background-color: #0d47a1;
+            }
+            
+            .form-control, .form-select {
+                background-color: #2d2d2d;
+                color: #e0e0e0;
+                border-color: #444;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container py-4">
+        <!-- Header Section -->
+        <div class="row mb-4">
+            <div class="col-12 text-center">
+                <h1 class="energy-display">Energy EP! Temp V</h1>
+                <div class="temp-display">
+                    <i class="bi bi-thermometer-half"></i> Current Temp: <span id="current-temp">--</span>°C
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content Tabs -->
+        <ul class="nav nav-tabs mb-4" id="mainTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="control-tab" data-bs-toggle="tab" data-bs-target="#control-panel" type="button" role="tab">Control Panel</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="security-tab" data-bs-toggle="tab" data-bs-target="#security" type="button" role="tab">Security</button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="data-tab" data-bs-toggle="tab" data-bs-target="#data" type="button" role="tab">Data & Transfer</button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="mainTabsContent">
+            <!-- Control Panel Tab -->
+            <div class="tab-pane fade show active" id="control-panel" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                System Status
+                            </div>
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-6">
+                                        <p class="mb-1">Detection Status:</p>
+                                        <span id="detection-status" class="badge bg-success status-badge">Active</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-1">Battery:</p>
+                                        <span id="battery-level" class="badge bg-info status-badge">--%</span>
+                                    </div>
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <p class="mb-1">Voice Alerts:</p>
+                                        <span id="voice-status" class="badge bg-success status-badge">Enabled</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="mb-1">WiFi:</p>
+                                        <span id="wifi-status" class="badge bg-success status-badge">Connected</span>
+                                    </div>
+                                </div>
+                                <div class="d-grid gap-2 mt-3">
+                                    <button id="toggle-detection" class="btn btn-primary">Toggle Detection</button>
+                                    <button id="toggle-voice" class="btn btn-secondary">Toggle Voice Alerts</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                Piff. Web App (2 days)
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Current Mode:</label>
+                                    <select id="operation-mode" class="form-select">
+                                        <option value="indoor">Indoor Mode</option>
+                                        <option value="outdoor">Outdoor Mode</option>
+                                        <option value="custom">Custom Mode</option>
+                                    </select>
+                                </div>
+                                <div class="progress mb-3">
+                                    <div id="cpu-usage" class="progress-bar bg-info" role="progressbar" style="width: 25%">CPU: 25%</div>
+                                </div>
+                                <div class="progress">
+                                    <div id="memory-usage" class="progress-bar bg-warning" role="progressbar" style="width: 45%">Memory: 45%</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                Live Camera Feed
+                            </div>
+                            <div class="card-body text-center">
+                                <img id="video-feed" src="" class="img-fluid rounded" alt="Live Feed" style="max-height: 300px;">
+                                <div class="mt-2">
+                                    <button id="capture-btn" class="btn btn-sm btn-primary me-2">Capture Image</button>
+                                    <button id="record-btn" class="btn btn-sm btn-danger">Record Video</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Security Tab -->
+            <div class="tab-pane fade" id="security" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                User Security
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">User Interface</label>
+                                    <select class="form-select">
+                                        <option>Basic</option>
+                                        <option>Advanced</option>
+                                        <option selected>Custom</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">TPW (Temporary Password)</label>
+                                    <div class="input-group">
+                                        <input type="password" class="form-control" value="Accept" readonly>
+                                        <button class="btn btn-outline-secondary" type="button">Change</button>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="chatbot-toggle" checked>
+                                    <label class="form-check-label" for="chatbot-toggle">Enable Chatbot (4/2)</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="render-toggle">
+                                    <label class="form-check-label" for="render-toggle">IS.html Render Code</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                Input Configuration
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">User Input</label>
+                                    <input type="text" class="form-control" value="Default">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">IPW</label>
+                                    <input type="text" class="form-control" value="192.168.1.1">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Aquery</label>
+                                    <input type="text" class="form-control" value="Standard">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">ID</label>
+                                    <input type="text" class="form-control" value="HAT-001">
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">User Interface</label>
+                                    <select class="form-select">
+                                        <option>Touch</option>
+                                        <option>Voice</option>
+                                        <option selected>Hybrid</option>
+                                    </select>
+                                </div>
+                                <button class="btn btn-primary w-100">Save Configuration</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Data & Transfer Tab -->
+            <div class="tab-pane fade" id="data" role="tabpanel">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                Data Transfer
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label class="form-label">Transfer Protocol</label>
+                                    <select class="form-select">
+                                        <option>HTTP</option>
+                                        <option selected>HTTPS</option>
+                                        <option>WebSocket</option>
+                                    </select>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Data Compression</label>
+                                    <select class="form-select">
+                                        <option>None</option>
+                                        <option selected>GZIP</option>
+                                        <option>LZ4</option>
+                                    </select>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="encryption-toggle" checked>
+                                    <label class="form-check-label" for="encryption-toggle">Enable Encryption</label>
+                                </div>
+                                <button class="btn btn-primary me-2">Upload Logs</button>
+                                <button class="btn btn-secondary">Download Data</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card">
+                            <div class="card-header">
+                                System Logs
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th>Time</th>
+                                                <th>Event</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr>
+                                                <td>10:23:45</td>
+                                                <td>System Start</td>
+                                                <td><span class="badge bg-success">OK</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>10:24:12</td>
+                                                <td>Camera Init</td>
+                                                <td><span class="badge bg-success">OK</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>10:25:03</td>
+                                                <td>WiFi Connect</td>
+                                                <td><span class="badge bg-warning">Slow</span></td>
+                                            </tr>
+                                            <tr>
+                                                <td>10:26:47</td>
+                                                <td>Object Detection</td>
+                                                <td><span class="badge bg-success">Active</span></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="d-grid gap-2 mt-2">
+                                    <button class="btn btn-sm btn-outline-secondary">Clear Logs</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for captured image -->
+    <div class="modal fade" id="imageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Captured Image</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="captured-image" src="" class="img-fluid" alt="Captured Image">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary">Save Image</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Simulate real-time data updates
+        function updateSystemStats() {
+            // Random data for demo - replace with actual API calls in production
+            document.getElementById('current-temp').textContent = (35 + Math.random() * 5).toFixed(1);
+            document.getElementById('battery-level').textContent = Math.floor(20 + Math.random() * 80) + '%';
+            
+            const cpuUsage = Math.floor(10 + Math.random() * 60);
+            const cpuElement = document.getElementById('cpu-usage');
+            cpuElement.style.width = cpuUsage + '%';
+            cpuElement.textContent = 'CPU: ' + cpuUsage + '%';
+            
+            const memUsage = Math.floor(30 + Math.random() * 50);
+            const memElement = document.getElementById('memory-usage');
+            memElement.style.width = memUsage + '%';
+            memElement.textContent = 'Memory: ' + memUsage + '%';
+            
+            // Update video feed (in a real app, this would be a live stream)
+            document.getElementById('video-feed').src = 'https://via.placeholder.com/800x600?text=Live+Feed+' + new Date().getTime();
+        }
+        
+        // Initialize and update stats every 3 seconds
+        updateSystemStats();
+        setInterval(updateSystemStats, 3000);
+        
+        // Button event handlers
+        document.getElementById('toggle-detection').addEventListener('click', function() {
+            const statusElement = document.getElementById('detection-status');
+            if (statusElement.classList.contains('bg-success')) {
+                statusElement.classList.remove('bg-success');
+                statusElement.classList.add('bg-danger');
+                statusElement.textContent = 'Inactive';
+            } else {
+                statusElement.classList.remove('bg-danger');
+                statusElement.classList.add('bg-success');
+                statusElement.textContent = 'Active';
+            }
+        });
+        
+        document.getElementById('toggle-voice').addEventListener('click', function() {
+            const statusElement = document.getElementById('voice-status');
+            if (statusElement.classList.contains('bg-success')) {
+                statusElement.classList.remove('bg-success');
+                statusElement.classList.add('bg-secondary');
+                statusElement.textContent = 'Disabled';
+            } else {
+                statusElement.classList.remove('bg-secondary');
+                statusElement.classList.add('bg-success');
+                statusElement.textContent = 'Enabled';
+            }
+        });
+        
+        document.getElementById('capture-btn').addEventListener('click', function() {
+            // In a real app, this would capture the current frame from the video feed
+            const modal = new bootstrap.Modal(document.getElementById('imageModal'));
+            document.getElementById('captured-image').src = 'https://via.placeholder.com/800x600?text=Captured+Image+' + new Date().getTime();
+            modal.show();
+        });
+        
+        document.getElementById('record-btn').addEventListener('click', function() {
+            const btn = this;
+            if (btn.classList.contains('btn-danger')) {
+                btn.classList.remove('btn-danger');
+                btn.classList.add('btn-secondary');
+                btn.textContent = 'Record Video';
+                alert('Video recording stopped');
+            } else {
+                btn.classList.remove('btn-secondary');
+                btn.classList.add('btn-danger');
+                btn.textContent = 'Stop Recording';
+                alert('Video recording started');
+            }
+        });
+        
+        // Initialize tooltips
+        const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    </script>
+</body>
+</html>
